@@ -5,6 +5,8 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+      <SteamLibraryPath>E:\SteamLibrary\steamapps</SteamLibraryPath>
+      <Sts2Path>$(SteamLibraryPath)\common\Slay the Spire 2</Sts2Path>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -18,14 +20,14 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>E:\SteamLibrary\steamapps\common\Slay the Spire 2\data_sts2_windows_x86_64\0Harmony.dll</HintPath>
+      <HintPath>$(Sts2Path)\data_sts2_windows_x86_64\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="sts2">
-      <HintPath>E:\SteamLibrary\steamapps\common\Slay the Spire 2\data_sts2_windows_x86_64\sts2.dll</HintPath>
+      <HintPath>$(Sts2Path)\data_sts2_windows_x86_64\sts2.dll</HintPath>
       <Publicize>true</Publicize>
     </Reference>
     <Reference Include="GodotSharp">
-      <HintPath>E:\SteamLibrary\steamapps\common\Slay the Spire 2\data_sts2_windows_x86_64\GodotSharp.dll</HintPath>
+      <HintPath>$(Sts2Path)\data_sts2_windows_x86_64\GodotSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -35,6 +37,6 @@
     </PackageReference>
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy /Y &quot;$(TargetPath)&quot; &quot;E:\SteamLibrary\steamapps\common\Slay the Spire 2\mods&quot;" />
+    <Exec Command="copy /Y &quot;$(TargetPath)&quot; &quot;$(Sts2Path)\mods&quot;" />
   </Target>
 </Project>
