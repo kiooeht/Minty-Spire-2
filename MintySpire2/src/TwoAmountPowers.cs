@@ -131,7 +131,6 @@ static class TwoAmountPowers
                 }
 
                 if (model is PowerModel power) {
-                    Log.Info(method.FullDescription());
                     if (AfterHookPowers.TryGetValue(method, out var powers) && powers.Contains(power.GetType())) {
                         CallRefreshAmount(power);
                     }
