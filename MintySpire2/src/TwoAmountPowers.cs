@@ -57,6 +57,7 @@ static class TwoAmountPowers
             }
         } },
         { typeof(ToricToughnessPower), power => power.DynamicVars.Block.IntValue.ToString() },
+        { typeof(InfernoPower), power => power.DynamicVars[InfernoPower._selfDamageKey].IntValue.ToString() },
     };
 
     [HarmonyPatch(nameof(NPower._Ready))]
@@ -105,6 +106,7 @@ static class TwoAmountPowers
                 typeof(JugglingPower).Method(nameof(JugglingPower.AfterTurnEnd)),
                 typeof(PaleBlueDotPower).Method(nameof(PaleBlueDotPower.ModifyHandDraw)),
                 typeof(ToricToughnessPower).Method(nameof(ToricToughnessPower.SetBlock)),
+                typeof(InfernoPower).Method(nameof(InfernoPower.IncrementSelfDamage)),
             ];
         }
 
