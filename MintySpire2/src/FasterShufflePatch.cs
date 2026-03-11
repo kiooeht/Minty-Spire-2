@@ -1,12 +1,9 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.CompilerServices;
 using Godot;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Commands;
-using MegaCrit.Sts2.Core.Entities.Cards;
-using MegaCrit.Sts2.Core.Models;
+using MintySpire2.MintySpire2.src.util;
 
 namespace MintySpire2.MintySpire2.src;
 
@@ -28,12 +25,7 @@ public class FasterShufflePatch
     {
         static MethodBase TargetMethod()
         {
-            var method = typeof(CardPileCmd).Method("Shuffle");
-            var stateMachineAttribute = method.GetCustomAttribute<AsyncStateMachineAttribute>();
-            var moveNextMethod =
-                stateMachineAttribute?.StateMachineType.GetMethod("MoveNext",
-                    BindingFlags.NonPublic | BindingFlags.Instance);
-            return moveNextMethod!;
+            return typeof(CardPileCmd).Method(nameof(CardPileCmd.Shuffle)).PatchAsync();
         }
         private static float MultiplyShuffleSpeed(float normalTime)
         {
