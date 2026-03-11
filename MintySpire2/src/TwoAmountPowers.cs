@@ -124,8 +124,6 @@ static class TwoAmountPowers
             [HarmonyTargetMethods]
             static IEnumerable<MethodBase> HooksToRefreshAmount2After()
             {
-                Log.Info("ASDF");
-                Log.Info(AfterHookPowers.Keys.First().FullDescription());
                 return AfterHookPowers.Keys;
             }
 
