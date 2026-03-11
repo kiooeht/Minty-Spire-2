@@ -1,13 +1,17 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
 using Godot;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Combat;
+using MegaCrit.Sts2.Core.Context;
 using MegaCrit.Sts2.Core.Hooks;
+using MegaCrit.Sts2.Core.Logging;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Models.Powers;
 using MegaCrit.Sts2.Core.Nodes.Combat;
+using MegaCrit.Sts2.Core.Runs;
+using MegaCrit.Sts2.Core.ValueProps;
+using MintySpire2.MintySpire2.src.util;
 
 namespace MintySpire2.MintySpire2.src;
 
@@ -27,6 +31,18 @@ static class TwoAmountPowers
                 c.CardPlay.Card.Owner == power.Owner.Player);
             var threshold = power.DynamicVars[PaleBlueDotPower.cardPlayThresholdKey].IntValue;
             return $"{cardCount}/{threshold}";
+        } },
+        { typeof(VulnerablePower), power => {
+            // Displays Vulnerable's % increase if it's not 50%
+            var player = LocalContext.GetMe(RunManager.Instance.State);
+            var mult = power.ModifyDamageMultiplicative(power.Owner, 1M, ValueProp.Move, player?.Creature, null);
+            if (mult != power.DynamicVars[VulnerablePower._damageIncrease].BaseValue) {
+                mult = (mult - 1M) * 100M;
+                return mult.ToString("0.##") + "%";
+            }
+            else {
+                return string.Empty;
+            }
         } },
     };
 
@@ -65,7 +81,8 @@ static class TwoAmountPowers
             doNotFlashOnAmountRefresh = true;
         }
         
-        static IEnumerable<MethodBase> TargetMethods()
+        [HarmonyTargetMethods]
+        static IEnumerable<MethodBase> MethodsToPostfixRefreshAmount2()
         {
             return [
                 typeof(VoidFormPower).Method(nameof(VoidFormPower.AfterCardPlayed)),
@@ -80,26 +97,36 @@ static class TwoAmountPowers
         [HarmonyPatch]
         static class SpecificFixes
         {
-            private static readonly List<Type> AfterCardPlayedPowers = [
-                typeof(PaleBlueDotPower),
-            ];
+            private static readonly Dictionary<MethodBase, HashSet<Type>> AfterHookPowers = new() {
+                { typeof(Hook).Method(nameof(Hook.AfterCardPlayed)).PatchAsync(), [
+                    typeof(PaleBlueDotPower),
+                ] },
+                { typeof(Hook).Method(nameof(Hook.AfterPowerAmountChanged)).PatchAsync(), [
+                    typeof(VulnerablePower),
+                ] },
+            };
         
-            private static void AfterCardPlayed(AbstractModel model)
+            private static void AfterHook(AbstractModel model, MethodBase method)
             {
+                // Get original, unpatched method so we can use it as a lookup key properly
+                if (method is MethodInfo methodInfo) {
+                    method = Harmony.GetOriginalMethod(methodInfo);
+                }
+
                 if (model is PowerModel power) {
-                    if (AfterCardPlayedPowers.Contains(power.GetType())) {
+                    Log.Info(method.FullDescription());
+                    if (AfterHookPowers.TryGetValue(method, out var powers) && powers.Contains(power.GetType())) {
                         CallRefreshAmount(power);
                     }
                 }
             }
         
-            static MethodBase TargetMethod() {
-                var method = typeof(Hook).Method(nameof(Hook.AfterCardPlayed));
-                var stateMachineAttribute = method.GetCustomAttribute<AsyncStateMachineAttribute>();
-                var moveNextMethod =
-                    stateMachineAttribute?.StateMachineType.GetMethod("MoveNext",
-                        BindingFlags.NonPublic | BindingFlags.Instance);
-                return moveNextMethod!;
+            [HarmonyTargetMethods]
+            static IEnumerable<MethodBase> HooksToRefreshAmount2After()
+            {
+                Log.Info("ASDF");
+                Log.Info(AfterHookPowers.Keys.First().FullDescription());
+                return AfterHookPowers.Keys;
             }
 
             [HarmonyTranspiler]
@@ -114,7 +141,8 @@ static class TwoAmountPowers
                     .ThrowIfInvalid("Failed to find InvokeExecutionFinished()")
                     .InsertAndAdvance(
                         new CodeInstruction(OpCodes.Dup),
-                        CodeInstruction.Call<AbstractModel>(model => AfterCardPlayed(model))
+                        CodeInstruction.Call(() => MethodBase.GetCurrentMethod()),
+                        new CodeInstruction(OpCodes.Call, typeof(SpecificFixes).Method(nameof(AfterHook)))
                     );
 
                 return codeMatcher.Instructions();
