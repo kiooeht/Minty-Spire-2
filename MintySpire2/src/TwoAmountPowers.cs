@@ -56,6 +56,7 @@ static class TwoAmountPowers
                 return string.Empty;
             }
         } },
+        { typeof(ToricToughnessPower), power => power.DynamicVars.Block.IntValue.ToString() },
     };
 
     [HarmonyPatch(nameof(NPower._Ready))]
@@ -103,6 +104,7 @@ static class TwoAmountPowers
                 typeof(JugglingPower).Method(nameof(JugglingPower.AfterCardPlayed)),
                 typeof(JugglingPower).Method(nameof(JugglingPower.AfterTurnEnd)),
                 typeof(PaleBlueDotPower).Method(nameof(PaleBlueDotPower.ModifyHandDraw)),
+                typeof(ToricToughnessPower).Method(nameof(ToricToughnessPower.SetBlock)),
             ];
         }
 
