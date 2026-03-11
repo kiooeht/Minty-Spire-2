@@ -44,6 +44,18 @@ static class TwoAmountPowers
                 return string.Empty;
             }
         } },
+        { typeof(WeakPower), power => {
+            // Displays Weak's % decrease if it's not 25%
+            var player = LocalContext.GetMe(RunManager.Instance.State);
+            var mult = power.ModifyDamageMultiplicative(player?.Creature, 1M, ValueProp.Move, power.Owner, null);
+            if (mult != power.DynamicVars[WeakPower._damageDecrease].BaseValue) {
+                mult = (1M - mult) * 100M;
+                return mult.ToString("0.##") + "%";
+            }
+            else {
+                return string.Empty;
+            }
+        } },
     };
 
     [HarmonyPatch(nameof(NPower._Ready))]
@@ -103,6 +115,7 @@ static class TwoAmountPowers
                 ] },
                 { typeof(Hook).Method(nameof(Hook.AfterPowerAmountChanged)).PatchAsync(), [
                     typeof(VulnerablePower),
+                    typeof(WeakPower),
                 ] },
             };
         
