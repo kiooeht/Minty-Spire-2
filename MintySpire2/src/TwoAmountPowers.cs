@@ -192,6 +192,19 @@ static class TwoAmountPowers
 
                 return codeMatcher.Instructions();
             }
+            
+            [HarmonyPatch(typeof(PowerModel), nameof(PowerModel.RemoveInternal))]
+            static class VulnWeakOnDebilitateRemoval
+            {
+                [HarmonyPostfix]
+                static void RefreshVulnWeak(PowerModel __instance)
+                {
+                    if (__instance is not DebilitatePower) return;
+                    foreach (var powerModel in __instance.Owner.Powers.Where(p => p is VulnerablePower or WeakPower)) {
+                        CallRefreshAmount(powerModel);
+                    }
+                }
+            }
         }
     }
     
