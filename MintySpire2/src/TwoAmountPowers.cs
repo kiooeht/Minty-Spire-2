@@ -5,6 +5,7 @@ using Godot;
 using HarmonyLib;
 using MegaCrit.Sts2.addons.mega_text;
 using MegaCrit.Sts2.Core.Combat;
+using MegaCrit.Sts2.Core.Combat.History.Entries;
 using MegaCrit.Sts2.Core.Context;
 using MegaCrit.Sts2.Core.Hooks;
 using MegaCrit.Sts2.Core.Models;
@@ -66,6 +67,15 @@ static class TwoAmountPowers
         { typeof(CrimsonMantlePower), power => {
                 var selfDamage = power.DynamicVars[CrimsonMantlePower._selfDamageKey].IntValue;
                 return selfDamage != 0 ? new Amount2Data(selfDamage.ToString(), PowerModel._debuffAmountLabelColor) : string.Empty;
+            }
+        },
+        { typeof(UnmovablePower), power => {
+                var usesLeft = power.Amount - CombatManager.Instance.History.Entries.OfType<BlockGainedEntry>()
+                    .Count(e =>
+                        e.HappenedThisTurn(power.CombatState)
+                        && e.Actor == power.Owner
+                        && e.Props.IsCardOrMonsterMove());
+                return Math.Max(0, usesLeft).ToString();
             }
         },
     };
@@ -151,6 +161,12 @@ static class TwoAmountPowers
                 { typeof(Hook).Method(nameof(Hook.AfterPowerAmountChanged)).PatchAsync(), [
                     typeof(VulnerablePower),
                     typeof(WeakPower),
+                ] },
+                { typeof(Hook).Method(nameof(Hook.AfterBlockGained)).PatchAsync(), [
+                    typeof(UnmovablePower),
+                ] },
+                { typeof(Hook).Method(nameof(Hook.AfterPlayerTurnStart)).PatchAsync(), [
+                    typeof(UnmovablePower),
                 ] },
             };
         
