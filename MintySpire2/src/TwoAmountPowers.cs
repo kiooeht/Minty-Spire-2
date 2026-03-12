@@ -1,11 +1,12 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using Godot;
 using HarmonyLib;
+using MegaCrit.Sts2.addons.mega_text;
 using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Context;
 using MegaCrit.Sts2.Core.Hooks;
-using MegaCrit.Sts2.Core.Logging;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Models.Powers;
 using MegaCrit.Sts2.Core.Nodes.Combat;
@@ -59,13 +60,20 @@ static class TwoAmountPowers
         { typeof(ToricToughnessPower), power => power.DynamicVars.Block.IntValue.ToString() },
         { typeof(InfernoPower), power => power.DynamicVars[InfernoPower._selfDamageKey].IntValue.ToString() },
     };
+    
+    private static readonly ConditionalWeakTable<NPower, MegaLabel> Amount2Labels = new();
 
     [HarmonyPatch(nameof(NPower._Ready))]
-    [HarmonyPostfix]
+    [HarmonyPrefix]
     static void AddSecondAmountLabel(NPower __instance)
     {
-        __instance._amountLabel.AddThemeConstantOverride("line_spacing", -2);
-        __instance._amountLabel.SetVGrowDirection(Control.GrowDirection.Begin);
+        var amount1Label = __instance.GetNode<MegaLabel>("%AmountLabel");
+        var amount2Label = Amount2Labels.GetValue(__instance, _ => (MegaLabel) amount1Label.Duplicate());
+        amount2Label.Name = "Amount2Label";
+        amount2Label.UniqueNameInOwner = true;
+        amount2Label.Visible = false;
+        __instance.AddChild(amount2Label);
+        __instance.MoveChild(amount2Label, amount1Label.GetIndex());
     }
     
     [HarmonyPatch(nameof(NPower.RefreshAmount))]
@@ -74,12 +82,17 @@ static class TwoAmountPowers
     {
         if (__instance._model == null) return;
         
+        var amount2Label = Amount2Labels.GetOrCreateValue(__instance);
+        amount2Label.Visible = false;
         DisplaySecondAmount.TryGetValue(__instance.Model.GetType(), out var func);
         if (func != null) {
-            var text = __instance._amountLabel.Text;
             var amount2 = func.Invoke(__instance.Model);
             if (!string.IsNullOrEmpty(amount2)) {
-                __instance._amountLabel.SetTextAutoSize($"{amount2}\n{text}");
+                amount2Label.Visible = true;
+                amount2Label.AddThemeColorOverride(ThemeConstants.Label.fontColor, __instance.Model.AmountLabelColor);
+                amount2Label.SetTextAutoSize($"{amount2}");
+                var fontSize = amount2Label.GetThemeFontSize(ThemeConstants.Label.fontSize);
+                amount2Label.Position = __instance._amountLabel.Position + new Vector2(0, -(fontSize + 2));
             }
         }
     }
