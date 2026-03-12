@@ -21,11 +21,11 @@ namespace MintySpire2.MintySpire2.src;
 static class TwoAmountPowers
 {
     private static readonly Dictionary<Type, Func<PowerModel, Amount2Data>> DisplaySecondAmount = new() {
-        { typeof(OutbreakPower), power => power.Amount.ToString() },
-        { typeof(PanachePower), power => power.Amount.ToString() },
-        { typeof(TheBombPower), power => power.DynamicVars.Damage.IntValue.ToString() },
-        { typeof(VoidFormPower), power => Math.Max(0, power.Amount - power.GetInternalData<VoidFormPower.Data>().cardsPlayedThisTurn).ToString() },
-        { typeof(JugglingPower), power => power.GetInternalData<JugglingPower.Data>().attacksPlayedThisTurn.ToString() },
+        { typeof(OutbreakPower), power => power.Amount },
+        { typeof(PanachePower), power => power.Amount },
+        { typeof(TheBombPower), power => power.DynamicVars.Damage.IntValue },
+        { typeof(VoidFormPower), power => Math.Max(0, power.Amount - power.GetInternalData<VoidFormPower.Data>().cardsPlayedThisTurn) },
+        { typeof(JugglingPower), power => power.GetInternalData<JugglingPower.Data>().attacksPlayedThisTurn },
         { typeof(PaleBlueDotPower), power => {
             // Displays X/5 as amount2 where X is cards played this turn
             var cardCount = CombatManager.Instance.History.CardPlaysFinished.Count(c =>
@@ -58,7 +58,7 @@ static class TwoAmountPowers
                 return string.Empty;
             }
         } },
-        { typeof(ToricToughnessPower), power => power.DynamicVars.Block.IntValue.ToString() },
+        { typeof(ToricToughnessPower), power => power.DynamicVars.Block.IntValue },
         { typeof(InfernoPower), power => {
                 var selfDamage = power.DynamicVars[InfernoPower._selfDamageKey].IntValue;
                 return selfDamage != 0 ? new Amount2Data(selfDamage.ToString(), PowerModel._debuffAmountLabelColor) : string.Empty;
@@ -75,7 +75,7 @@ static class TwoAmountPowers
                         e.HappenedThisTurn(power.CombatState)
                         && e.Actor == power.Owner
                         && e.Props.IsCardOrMonsterMove());
-                return Math.Max(0, usesLeft).ToString();
+                return Math.Max(0, usesLeft);
             }
         },
     };
@@ -85,7 +85,8 @@ static class TwoAmountPowers
         public string Text = text;
         public Color? Color = color;
 
-        public static implicit operator Amount2Data(string text) => new Amount2Data(text);
+        public static implicit operator Amount2Data(int amount) => new(amount.ToString());
+        public static implicit operator Amount2Data(string text) => new(text);
     }
     
     private static readonly ConditionalWeakTable<NPower, MegaLabel> Amount2Labels = new();
