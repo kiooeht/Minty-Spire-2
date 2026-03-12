@@ -7,6 +7,7 @@ Successor of the StS1 mod with the same name. This is a compilation of small qua
 - Sums damage from multi attack intents
 - Make torches clickable to extiguish and light them (cany0udance)
 - Show ascenscion effects when hovering the character portrait in the top bar (kiooeht)
+- Display a second amount on powers that track multiple values (kiooeht)
 - Increase animation speed of shuffling discard into draw pile (pandemonium)
 
 ## Known issues
