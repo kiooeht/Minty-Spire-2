@@ -19,7 +19,7 @@ namespace MintySpire2.MintySpire2.src;
 [HarmonyPatch(typeof(NPower))]
 static class TwoAmountPowers
 {
-    private static readonly Dictionary<Type, Func<PowerModel, string>> DisplaySecondAmount = new() {
+    private static readonly Dictionary<Type, Func<PowerModel, Amount2Data>> DisplaySecondAmount = new() {
         { typeof(OutbreakPower), power => power.Amount.ToString() },
         { typeof(PanachePower), power => power.Amount.ToString() },
         { typeof(TheBombPower), power => power.DynamicVars.Damage.IntValue.ToString() },
@@ -58,8 +58,16 @@ static class TwoAmountPowers
             }
         } },
         { typeof(ToricToughnessPower), power => power.DynamicVars.Block.IntValue.ToString() },
-        { typeof(InfernoPower), power => power.DynamicVars[InfernoPower._selfDamageKey].IntValue.ToString() },
+        { typeof(InfernoPower), power => new Amount2Data(power.DynamicVars[InfernoPower._selfDamageKey].IntValue.ToString(), PowerModel._debuffAmountLabelColor) },
     };
+
+    private class Amount2Data(string text, Color? color = null)
+    {
+        public string Text = text;
+        public Color? Color = color;
+
+        public static implicit operator Amount2Data(string text) => new Amount2Data(text);
+    }
     
     private static readonly ConditionalWeakTable<NPower, MegaLabel> Amount2Labels = new();
 
@@ -87,10 +95,10 @@ static class TwoAmountPowers
         DisplaySecondAmount.TryGetValue(__instance.Model.GetType(), out var func);
         if (func != null) {
             var amount2 = func.Invoke(__instance.Model);
-            if (!string.IsNullOrEmpty(amount2)) {
+            if (!string.IsNullOrEmpty(amount2.Text)) {
                 amount2Label.Visible = true;
-                amount2Label.AddThemeColorOverride(ThemeConstants.Label.fontColor, __instance.Model.AmountLabelColor);
-                amount2Label.SetTextAutoSize($"{amount2}");
+                amount2Label.AddThemeColorOverride(ThemeConstants.Label.fontColor, amount2.Color ?? __instance.Model.AmountLabelColor);
+                amount2Label.SetTextAutoSize(amount2.Text);
                 var fontSize = amount2Label.GetThemeFontSize(ThemeConstants.Label.fontSize);
                 amount2Label.Position = __instance._amountLabel.Position + new Vector2(0, -(fontSize + 2));
             }
