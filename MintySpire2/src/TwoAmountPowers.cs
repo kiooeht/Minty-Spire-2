@@ -78,6 +78,7 @@ static class TwoAmountPowers
                 return  new Amount2Data(amount1: $"{Math.Max(0, usesLeft)}/{power.DisplayAmount}");
             }
         },
+        { typeof(FeralPower), power => new Amount2Data(amount1: $"{power.DisplayAmount}/{power.Amount}") },
     };
 
     private class Amount2Data(string? amount2 = null, string? amount1 = null, Color? color2 = null)
