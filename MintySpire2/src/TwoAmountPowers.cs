@@ -83,9 +83,9 @@ static class TwoAmountPowers
 
     private class Amount2Data(string? amount2 = null, string? amount1 = null, Color? color2 = null)
     {
-        public string? Amount1 = amount1;
-        public string? Amount2 = amount2;
-        public Color? Color2 = color2;
+        public readonly string? Amount1 = amount1;
+        public readonly string? Amount2 = amount2;
+        public readonly Color? Color2 = color2;
 
         public static implicit operator Amount2Data(int amount2) => new(amount2: amount2.ToString());
         public static implicit operator Amount2Data(string amount2) => new(amount2: amount2);
