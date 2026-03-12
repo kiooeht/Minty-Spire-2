@@ -24,7 +24,7 @@ static class TwoAmountPowers
         { typeof(OutbreakPower), power => power.Amount },
         { typeof(PanachePower), power => power.Amount },
         { typeof(TheBombPower), power => power.DynamicVars.Damage.IntValue },
-        { typeof(VoidFormPower), power => Math.Max(0, power.Amount - power.GetInternalData<VoidFormPower.Data>().cardsPlayedThisTurn) },
+        { typeof(VoidFormPower), power => new Amount2Data(amount1: $"{Math.Max(0, power.Amount - power.GetInternalData<VoidFormPower.Data>().cardsPlayedThisTurn)}/{power.Amount}") },
         { typeof(JugglingPower), power => power.GetInternalData<JugglingPower.Data>().attacksPlayedThisTurn },
         { typeof(PaleBlueDotPower), power => {
             // Displays X/5 as amount2 where X is cards played this turn
@@ -61,12 +61,12 @@ static class TwoAmountPowers
         { typeof(ToricToughnessPower), power => power.DynamicVars.Block.IntValue },
         { typeof(InfernoPower), power => {
                 var selfDamage = power.DynamicVars[InfernoPower._selfDamageKey].IntValue;
-                return selfDamage != 0 ? new Amount2Data(selfDamage.ToString(), PowerModel._debuffAmountLabelColor) : string.Empty;
+                return selfDamage != 0 ? new Amount2Data(amount2: selfDamage.ToString(), color2: PowerModel._debuffAmountLabelColor) : string.Empty;
             }
         },
         { typeof(CrimsonMantlePower), power => {
                 var selfDamage = power.DynamicVars[CrimsonMantlePower._selfDamageKey].IntValue;
-                return selfDamage != 0 ? new Amount2Data(selfDamage.ToString(), PowerModel._debuffAmountLabelColor) : string.Empty;
+                return selfDamage != 0 ? new Amount2Data(amount2: selfDamage.ToString(), color2: PowerModel._debuffAmountLabelColor) : string.Empty;
             }
         },
         { typeof(UnmovablePower), power => {
@@ -75,18 +75,19 @@ static class TwoAmountPowers
                         e.HappenedThisTurn(power.CombatState)
                         && e.Actor == power.Owner
                         && e.Props.IsCardOrMonsterMove());
-                return Math.Max(0, usesLeft);
+                return  new Amount2Data(amount1: $"{Math.Max(0, usesLeft)}/{power.DisplayAmount}");
             }
         },
     };
 
-    private class Amount2Data(string text, Color? color = null)
+    private class Amount2Data(string? amount2 = null, string? amount1 = null, Color? color2 = null)
     {
-        public string Text = text;
-        public Color? Color = color;
+        public string? Amount1 = amount1;
+        public string? Amount2 = amount2;
+        public Color? Color2 = color2;
 
-        public static implicit operator Amount2Data(int amount) => new(amount.ToString());
-        public static implicit operator Amount2Data(string text) => new(text);
+        public static implicit operator Amount2Data(int amount2) => new(amount2: amount2.ToString());
+        public static implicit operator Amount2Data(string amount2) => new(amount2: amount2);
     }
     
     private static readonly ConditionalWeakTable<NPower, MegaLabel> Amount2Labels = new();
@@ -115,10 +116,13 @@ static class TwoAmountPowers
         DisplaySecondAmount.TryGetValue(__instance.Model.GetType(), out var func);
         if (func != null) {
             var amount2 = func.Invoke(__instance.Model);
-            if (!string.IsNullOrEmpty(amount2.Text)) {
+            if (!string.IsNullOrEmpty(amount2.Amount1)) {
+                __instance._amountLabel.SetTextAutoSize(amount2.Amount1);
+            }
+            if (!string.IsNullOrEmpty(amount2.Amount2)) {
                 amount2Label.Visible = true;
-                amount2Label.AddThemeColorOverride(ThemeConstants.Label.fontColor, amount2.Color ?? __instance.Model.AmountLabelColor);
-                amount2Label.SetTextAutoSize(amount2.Text);
+                amount2Label.AddThemeColorOverride(ThemeConstants.Label.fontColor, amount2.Color2 ?? __instance.Model.AmountLabelColor);
+                amount2Label.SetTextAutoSize(amount2.Amount2);
                 var fontSize = amount2Label.GetThemeFontSize(ThemeConstants.Label.fontSize);
                 amount2Label.Position = __instance._amountLabel.Position + new Vector2(0, -(fontSize + 2));
             }
