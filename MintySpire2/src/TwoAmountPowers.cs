@@ -63,6 +63,11 @@ static class TwoAmountPowers
                 return selfDamage != 0 ? new Amount2Data(selfDamage.ToString(), PowerModel._debuffAmountLabelColor) : string.Empty;
             }
         },
+        { typeof(CrimsonMantlePower), power => {
+                var selfDamage = power.DynamicVars[CrimsonMantlePower._selfDamageKey].IntValue;
+                return selfDamage != 0 ? new Amount2Data(selfDamage.ToString(), PowerModel._debuffAmountLabelColor) : string.Empty;
+            }
+        },
     };
 
     private class Amount2Data(string text, Color? color = null)
@@ -132,6 +137,7 @@ static class TwoAmountPowers
                 typeof(PaleBlueDotPower).Method(nameof(PaleBlueDotPower.ModifyHandDraw)),
                 typeof(ToricToughnessPower).Method(nameof(ToricToughnessPower.SetBlock)),
                 typeof(InfernoPower).Method(nameof(InfernoPower.IncrementSelfDamage)),
+                typeof(CrimsonMantlePower).Method(nameof(InfernoPower.IncrementSelfDamage)),
             ];
         }
 
