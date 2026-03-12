@@ -58,7 +58,11 @@ static class TwoAmountPowers
             }
         } },
         { typeof(ToricToughnessPower), power => power.DynamicVars.Block.IntValue.ToString() },
-        { typeof(InfernoPower), power => new Amount2Data(power.DynamicVars[InfernoPower._selfDamageKey].IntValue.ToString(), PowerModel._debuffAmountLabelColor) },
+        { typeof(InfernoPower), power => {
+                var selfDamage = power.DynamicVars[InfernoPower._selfDamageKey].IntValue;
+                return selfDamage != 0 ? new Amount2Data(selfDamage.ToString(), PowerModel._debuffAmountLabelColor) : string.Empty;
+            }
+        },
     };
 
     private class Amount2Data(string text, Color? color = null)
