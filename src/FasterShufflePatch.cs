@@ -29,6 +29,9 @@ public class FasterShufflePatch
             return normalTime *  GetMultiplier();
         }
         
+        
+        //Harmony is trying to apply the patch twice for some reason
+        //Using a Prepare method to prevent it
         private static bool didPatch = false;
 
         static bool Prepare(MethodBase original)
