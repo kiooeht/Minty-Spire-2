@@ -3,10 +3,12 @@ using System.Reflection;
 using Godot;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Combat;
+using MegaCrit.Sts2.Core.Context;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Models.Powers;
 using MegaCrit.Sts2.Core.MonsterMoves.Intents;
 using MegaCrit.Sts2.Core.Nodes.Combat;
+using MegaCrit.Sts2.Core.Runs;
 using MintySpire2.util;
 
 namespace MintySpire2;
@@ -18,10 +20,9 @@ namespace MintySpire2;
 [HarmonyPatch(typeof(NHealthBar))]
 public static class SummedIncomingDamageRender
 {
-    private const string RightTextNodeName = "ModIncomingDamageText";
+    private const string RightTextNodeName = "MintyIncomingDamageText";
     private const float RightPadding = 6f;
-
-    private static readonly FieldInfo CreatureField = AccessTools.Field(typeof(NHealthBar), "_creature");
+    
     private static readonly WeakNodeRegistry<NHealthBar> ValidBars = new();
 
     /// <summary>
@@ -31,7 +32,11 @@ public static class SummedIncomingDamageRender
     [HarmonyPatch(nameof(NHealthBar.SetCreature))]
     public static void SetCreature_Postfix(NHealthBar __instance)
     {
-        CreateLabelIfNotExist(__instance);
+        var player = LocalContext.GetMe(RunManager.Instance.State);
+        if (player != null && __instance._creature?.Player == player)
+        {
+            CreateLabelIfNotExist(__instance);
+        }
     }
     
     /// <summary>
@@ -52,8 +57,12 @@ public static class SummedIncomingDamageRender
     [HarmonyPatch(nameof(NHealthBar.RefreshValues))]
     public static void RefreshValues_Postfix(NHealthBar __instance)
     {
-        ValidBars.Register(__instance);
-        RefreshVisibilityAndText(__instance);
+        var player = LocalContext.GetMe(RunManager.Instance.State);
+        if (player != null && __instance._creature?.Player == player)
+        {
+            ValidBars.Register(__instance);
+            RefreshVisibilityAndText(__instance);
+        }
     }
 
     /// <summary>
@@ -63,7 +72,11 @@ public static class SummedIncomingDamageRender
     [HarmonyPatch(typeof(NHealthBar), "SetHpBarContainerSizeWithOffsets")]
     public static void SetHpBarContainerSizeWithOffsets_Postfix(NHealthBar __instance, Vector2 size)
     {
-        RepositionLabel(__instance, size);
+        var player = LocalContext.GetMe(RunManager.Instance.State);
+        if (player != null && __instance._creature?.Player == player)
+        {
+            RepositionLabel(__instance, size);
+        }
     }
 
     /// <summary>
@@ -129,17 +142,17 @@ public static class SummedIncomingDamageRender
     private static void RefreshVisibilityAndText(NHealthBar bar)
     {
         var label = bar.GetNode(RightTextNodeName) as Label;
-        if (label == null)
+        if (label == null || !bar.Visible)
             return;
 
-        if (!bar.Visible || CombatManager.Instance.IsEnemyTurnStarted)
+        if (CombatManager.Instance.IsEnemyTurnStarted)
         {
             label.Visible = false;
             return;
         }
 
         // Only show for the player-owned health bar.
-        var creature = CreatureField?.GetValue(bar) as Creature;
+        var creature = bar._creature;
         if (creature?.Player == null || creature.CombatState == null)
         {
             label.Visible = false;
