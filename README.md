@@ -12,6 +12,7 @@ Successor of the StS1 mod with the same name. This is a compilation of small qua
 - Make's the Pael's Eye relic look at the mouse cursor (mangochicken)
 - Adds an indicator to attacks when pen nib is active (book)
 - Adds a preview of how much gold you will have after a purchase (Ind-E)
+- Reorders combat rewards to stop special card rewards like Thieving Hopper from covering the normal card reward when clicked in default order (kiooeht)
 
 ## Installation
 Make a folder called `mods` in the same directory as your sts2.exe `Steam\steamapps\common\Slay the Spire 2` and unzip the contents of the release (once available) into that folder or a subdirectory within that folder.
